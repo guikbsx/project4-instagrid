@@ -10,46 +10,37 @@ import UIKit
 
 class ViewController: UIViewController {
     
+    //Title View
     @IBOutlet weak var shareView: UIView!
     @IBOutlet weak var arrowImg: UIImageView!
     @IBOutlet weak var shareLbl: UILabel!
+    
+    private var imagePicker = UIImagePickerController()
 
-//    @IBOutlet weak var layoutOneView: LayoutOneView?
-//    @IBOutlet weak var layoutTwoView: LayoutTwoView?
-//    @IBOutlet weak var layoutThreeView: LayoutThreeView?
+    private var buttonId: Int!
+
+    //Center View
+    @IBOutlet var photoButtons: [UIButton]!
+    @IBAction func photoClicked(_ sender: UIButton) {
+        changePhoto()
+        buttonId = sender.tag
+    }
     
-    @IBOutlet weak var layoutOneView: UIView!
-    @IBOutlet weak var layoutTwoView: UIView!
-    @IBOutlet weak var layoutThreeView: UIView!
-    
-    @IBOutlet weak var chooseView: UIView!
-    @IBOutlet weak var layout1Button: UIButton!
+    //Choose View
+    @IBAction func layoutClicked(_ sender: UIButton) {
+        changePreview(tag: sender.tag)
         
-    @IBAction func layoutOneButton(_ sender: Any) {
-        layoutOneView?.isHidden = false
-        layoutTwoView?.isHidden = true
-        layoutThreeView?.isHidden = true
     }
     
-    @IBAction func layoutTwoButton(_ sender: Any) {
-        layoutOneView?.isHidden = true
-        layoutTwoView?.isHidden = false
-        layoutThreeView?.isHidden = true
-
-    }
-    
-    @IBAction func layoutThreeButton(_ sender: Any) {
-        layoutOneView?.isHidden = true
-        layoutTwoView?.isHidden = true
-        layoutThreeView?.isHidden = false
-
-    }
     override func viewDidLoad() {
         super.viewDidLoad()
-        configure()
-        //layoutOneView?.delegate = self
+        shareLbl.font = R.font.delmMedium(size: 30)
+        photoButtons.forEach {
+            $0.imageView?.contentMode = .scaleAspectFill
+        }
     }
     
+    ///iPhone is on landscape or portrait ?
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
         super.viewWillTransition(to: size, with: coordinator)
         if UIDevice.current.orientation.isLandscape {
@@ -63,50 +54,72 @@ class ViewController: UIViewController {
         }
     }
     
-    private func configure() {
-        shareLbl.font = R.font.delmMedium(size: 30)
-        layoutOneView?.isHidden = false
-        layoutTwoView?.isHidden = true
-        layoutThreeView?.isHidden = true
+    private func changePhoto() {
+        let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
+        alert.addAction(UIAlertAction(title: "Take Photo", style: .default, handler: { _ in
+            self.openCamera()
+        }))
+
+        alert.addAction(UIAlertAction(title: "Gallery", style: .default, handler: { _ in
+            self.openGallary()
+        }))
+
+        alert.addAction(UIAlertAction.init(title: "Cancel", style: .cancel, handler: nil))
+
+        self.present(alert, animated: true, completion: nil)
+    }
+    
+    private func changePreview(tag: Int) {
+        photoButtons.forEach {
+            $0.isHidden = false
+        }
+        if tag != 3 {
+            photoButtons[tag].isHidden = true
+        }
     }
 
 }
 
-extension ViewController: ButtonsDelegate, UIImagePickerControllerDelegate & UINavigationControllerDelegate {
-    func buttonSelected(sender: UIButton) {
-        let imagePickerController = UIImagePickerController()
-        imagePickerController.delegate = self
-        print("im here")
-        let actionSheet = UIAlertController(title : "Photo Source", message: "Choose a source", preferredStyle: .actionSheet)
-        
-        actionSheet.addAction(UIAlertAction(title: "Camera", style: .default, handler: { (action: UIAlertAction) in
-            imagePickerController.sourceType = .camera
-            self.present(imagePickerController, animated: true, completion: nil)
-        }))
-        
-        actionSheet.addAction(UIAlertAction(title: "Photo Gallery", style: .default, handler: { (action: UIAlertAction) in
-            imagePickerController.sourceType = .photoLibrary
-            self.present(imagePickerController, animated: true, completion: nil)
-        }))
-        
-        actionSheet.addAction(UIAlertAction(title: "Cancel", style: .default, handler: nil))
-        self.present(actionSheet, animated: true, completion: nil)
-        print("im hhhhhere")
+extension ViewController:  UIImagePickerControllerDelegate, UINavigationControllerDelegate{
+
+    func openCamera(){
+        if(UIImagePickerController .isSourceTypeAvailable(UIImagePickerController.SourceType.camera)){
+            imagePicker.sourceType = UIImagePickerController.SourceType.camera
+            //If you dont want to edit the photo then you can set allowsEditing to false
+            imagePicker.allowsEditing = true
+            imagePicker.delegate = self
+            imagePicker.cameraDevice = .front
+            self.present(imagePicker, animated: true, completion: nil)
+        }
+        else{
+            let alert  = UIAlertController(title: "Warning", message: "You don't have camera", preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+
+            self.present(alert, animated: true, completion: nil)
+        }
     }
-    
+
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
-        let image = info[UIImagePickerController.InfoKey.originalImage] as! UIImage
-        print("im here")
-    
-        //layoutOneView?.buttons[0].imageView?.image = image
-        picker.dismiss(animated: true, completion: nil)
-        
-    }
-    
-    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-        picker.dismiss(animated: true, completion: nil)
-    }
-    
-    
-}
 
+        if let editedImage = info[UIImagePickerController.InfoKey.editedImage] as? UIImage {
+            photoButtons[buttonId].setImage(editedImage, for: .normal)
+        }
+
+        //Dismiss the UIImagePicker after selection
+        picker.dismiss(animated: true, completion: nil)
+    }
+
+    //MARK: - Choose image from camera roll
+
+    func openGallary(){
+        imagePicker.sourceType = UIImagePickerController.SourceType.photoLibrary
+        imagePicker.allowsEditing = true
+        imagePicker.delegate = self
+        self.present(imagePicker, animated: true, completion: nil)
+    }
+
+    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+        picker.isNavigationBarHidden = false
+        self.dismiss(animated: true, completion: nil)
+    }
+}
