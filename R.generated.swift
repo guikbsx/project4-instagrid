@@ -309,6 +309,7 @@ struct _R: Rswift.Validatable {
         if UIKit.UIImage(named: "Layout 1", in: R.hostingBundle, compatibleWith: nil) == nil { throw Rswift.ValidationError(description: "[R.swift] Image named 'Layout 1' is used in storyboard 'Main', but couldn't be loaded.") }
         if UIKit.UIImage(named: "Layout 2", in: R.hostingBundle, compatibleWith: nil) == nil { throw Rswift.ValidationError(description: "[R.swift] Image named 'Layout 2' is used in storyboard 'Main', but couldn't be loaded.") }
         if UIKit.UIImage(named: "Layout 3", in: R.hostingBundle, compatibleWith: nil) == nil { throw Rswift.ValidationError(description: "[R.swift] Image named 'Layout 3' is used in storyboard 'Main', but couldn't be loaded.") }
+        if UIKit.UIImage(named: "Selected", in: R.hostingBundle, compatibleWith: nil) == nil { throw Rswift.ValidationError(description: "[R.swift] Image named 'Selected' is used in storyboard 'Main', but couldn't be loaded.") }
         if #available(iOS 11.0, tvOS 11.0, *) {
         }
       }

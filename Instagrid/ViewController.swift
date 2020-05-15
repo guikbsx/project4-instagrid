@@ -14,30 +14,45 @@ class ViewController: UIViewController {
     @IBOutlet weak var shareView: UIView!
     @IBOutlet weak var arrowImg: UIImageView!
     @IBOutlet weak var shareLbl: UILabel!
+    @IBOutlet weak var centerView: UIView!
     
     private var imagePicker = UIImagePickerController()
-
     private var buttonId: Int!
 
-    //Center View
     @IBOutlet var photoButtons: [UIButton]!
+    @IBOutlet var layoutButtons: [UIButton]!
     @IBAction func photoClicked(_ sender: UIButton) {
         changePhoto()
         buttonId = sender.tag
     }
     
     //Choose View
+    var isHighLighted:Bool = false
+    
     @IBAction func layoutClicked(_ sender: UIButton) {
         changePreview(tag: sender.tag)
-        
+        layoutButtons.forEach {
+            if $0.tag == sender.tag {
+                if !$0.isSelected {
+                    $0.isSelected = !$0.isSelected
+                }
+            } else if $0.isSelected {
+                $0.isSelected = !$0.isSelected
+            }
+        }
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         shareLbl.font = R.font.delmMedium(size: 30)
-        photoButtons.forEach {
-            $0.imageView?.contentMode = .scaleAspectFill
-        }
+        layoutButtons[0].setBackgroundImage(R.image.layout1(), for: .normal)
+        layoutButtons[1].setBackgroundImage(R.image.layout2(), for: .normal)
+        layoutButtons[2].setBackgroundImage(R.image.layout3(), for: .normal)
+        layoutButtons[2].isSelected = !layoutButtons[2].isSelected
+        photoButtons.forEach { $0.imageView?.contentMode = .scaleAspectFill }
+        let panGestureRecognizer = UIPanGestureRecognizer(target: self, action: #selector(dragCenterView(_:)))
+        centerView.addGestureRecognizer(panGestureRecognizer)
+        
     }
     
     ///iPhone is on landscape or portrait ?
@@ -80,6 +95,74 @@ class ViewController: UIViewController {
 
 }
 
+///Gesture and share
+extension ViewController {
+    
+    func defineTranslation(gesture: UIPanGestureRecognizer) -> CGFloat {
+        let translation = gesture.translation(in: centerView)
+        
+        if UIDevice.current.orientation.isLandscape {
+            centerView.transform = CGAffineTransform(translationX: translation.x, y: 0)
+            return translation.x
+        } else {
+            centerView.transform = CGAffineTransform(translationX: 0, y: translation.y)
+            return translation.y
+        }
+    }
+    
+    @objc func dragCenterView(_ sender: UIPanGestureRecognizer) {
+        let translation = defineTranslation(gesture: sender)
+        
+        switch sender.state {
+            case .began, .changed: break
+            case .ended, .cancelled: share(translation: translation)
+            default: break
+        }
+    }
+    
+    private func share(translation: CGFloat) {
+        if translation > -200 {
+            UIView.animate(withDuration: 0.3, delay: 0, options: [.curveEaseOut], animations: {
+                self.centerView.transform = CGAffineTransform(translationX: 0, y: 0)
+            })
+        } else {
+            photoButtons.forEach {
+                if $0.imageView?.image == nil {
+                    $0.setTitle("", for: .normal)
+                }
+            }
+            UIView.animate(withDuration: 0.3, delay: 0, options: [.curveEaseOut], animations: {
+                self.centerView.transform = UIDevice.current.orientation.isLandscape ? CGAffineTransform(translationX: -1000, y: 0) : CGAffineTransform(translationX: 0, y: -1000)
+            })
+            
+            if let image = imageWithView(view: centerView) {
+                let vc = UIActivityViewController(activityItems: [image], applicationActivities: [])
+                self.present(vc, animated: true, completion: nil)
+                vc.completionWithItemsHandler = { (_, _, _, _) in
+                    UIView.animate(withDuration: 0.3, delay: 0, options: [.curveEaseOut], animations: {
+                        self.centerView.transform = CGAffineTransform(translationX: 0, y: 0)
+                    })
+                }
+            }
+            photoButtons.forEach {
+                if $0.imageView?.image == nil {
+                    $0.setTitle("+", for: .normal)
+                }
+            }
+        }
+        
+    }
+
+    func imageWithView(view: UIView) -> UIImage? {
+        UIGraphicsBeginImageContextWithOptions(view.bounds.size, view.isOpaque, 0.0)
+        defer { UIGraphicsEndImageContext() }
+        view.drawHierarchy(in: view.bounds, afterScreenUpdates: true)
+        return UIGraphicsGetImageFromCurrentImageContext()
+    }
+    
+}
+
+///Image Picker
 extension ViewController:  UIImagePickerControllerDelegate, UINavigationControllerDelegate{
 
     func openCamera(){
