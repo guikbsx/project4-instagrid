@@ -98,7 +98,7 @@ class ViewController: UIViewController {
 ///Gesture and share
 extension ViewController {
     
-    func defineTranslation(gesture: UIPanGestureRecognizer) -> CGFloat {
+    func specifyTranslation(gesture: UIPanGestureRecognizer) -> CGFloat {
         let translation = gesture.translation(in: centerView)
         
         if UIDevice.current.orientation.isLandscape {
@@ -111,7 +111,7 @@ extension ViewController {
     }
     
     @objc func dragCenterView(_ sender: UIPanGestureRecognizer) {
-        let translation = defineTranslation(gesture: sender)
+        let translation = specifyTranslation(gesture: sender)
         
         switch sender.state {
             case .began, .changed: break
