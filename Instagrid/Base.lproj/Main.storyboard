@@ -169,8 +169,8 @@
                                                                 <constraints>
                                                                     <constraint firstAttribute="width" secondItem="0Nd-KF-4Xb" secondAttribute="height" multiplier="1:1" id="RCm-6g-ZQT"/>
                                                                 </constraints>
-                                                                <state key="normal" image="Layout 1"/>
-                                                                <state key="selected" image="Selected"/>
+                                                                <state key="normal" backgroundImage="Layout 1"/>
+                                                                <state key="selected" image="Selected" backgroundImage="Layout 1"/>
                                                                 <state key="highlighted" image="Selected"/>
                                                                 <connections>
                                                                     <action selector="layoutClicked:" destination="BYZ-38-t0r" eventType="touchUpInside" id="qsr-4d-CxP"/>
@@ -181,7 +181,7 @@
                                                                 <constraints>
                                                                     <constraint firstAttribute="width" secondItem="9Yo-YB-g3u" secondAttribute="height" multiplier="1:1" id="ue2-Ms-PKk"/>
                                                                 </constraints>
-                                                                <state key="normal" image="Layout 2"/>
+                                                                <state key="normal" backgroundImage="Layout 2"/>
                                                                 <state key="selected" image="Selected"/>
                                                                 <state key="highlighted" image="Selected"/>
                                                                 <connections>
@@ -193,7 +193,7 @@
                                                                 <constraints>
                                                                     <constraint firstAttribute="width" secondItem="bsi-Xw-Bf1" secondAttribute="height" multiplier="1:1" id="SRa-2m-Amm"/>
                                                                 </constraints>
-                                                                <state key="normal" image="Layout 3"/>
+                                                                <state key="normal" backgroundImage="Layout 3"/>
                                                                 <state key="selected" image="Selected"/>
                                                                 <state key="highlighted" image="Selected"/>
                                                                 <connections>

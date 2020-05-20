@@ -10,24 +10,29 @@ import UIKit
 
 class ViewController: UIViewController {
     
-    //Title View
-    @IBOutlet weak var shareView: UIView!
     @IBOutlet weak var arrowImg: UIImageView!
     @IBOutlet weak var shareLbl: UILabel!
     @IBOutlet weak var centerView: UIView!
-    
-    private var imagePicker = UIImagePickerController()
-    private var buttonId: Int!
-
     @IBOutlet var photoButtons: [UIButton]!
     @IBOutlet var layoutButtons: [UIButton]!
+
+    private var imagePicker = UIImagePickerController()
+    private var isHighLighted:Bool = false
+    private var buttonId: Int!
+    
     @IBAction func photoClicked(_ sender: UIButton) {
         changePhoto()
         buttonId = sender.tag
     }
     
-    //Choose View
-    var isHighLighted:Bool = false
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        shareLbl.font = R.font.delmMedium(size: 30)
+        layoutButtons[2].isSelected = !layoutButtons[2].isSelected
+        photoButtons.forEach { $0.imageView?.contentMode = .scaleAspectFill }
+        let panGestureRecognizer = UIPanGestureRecognizer(target: self, action: #selector(dragCenterView(_:)))
+        centerView.addGestureRecognizer(panGestureRecognizer)
+    }
     
     @IBAction func layoutClicked(_ sender: UIButton) {
         changePreview(tag: sender.tag)
@@ -42,20 +47,6 @@ class ViewController: UIViewController {
         }
     }
     
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        shareLbl.font = R.font.delmMedium(size: 30)
-        layoutButtons[0].setBackgroundImage(R.image.layout1(), for: .normal)
-        layoutButtons[1].setBackgroundImage(R.image.layout2(), for: .normal)
-        layoutButtons[2].setBackgroundImage(R.image.layout3(), for: .normal)
-        layoutButtons[2].isSelected = !layoutButtons[2].isSelected
-        photoButtons.forEach { $0.imageView?.contentMode = .scaleAspectFill }
-        let panGestureRecognizer = UIPanGestureRecognizer(target: self, action: #selector(dragCenterView(_:)))
-        centerView.addGestureRecognizer(panGestureRecognizer)
-        
-    }
-    
-    ///iPhone is on landscape or portrait ?
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
         super.viewWillTransition(to: size, with: coordinator)
         if UIDevice.current.orientation.isLandscape {
@@ -95,24 +86,22 @@ class ViewController: UIViewController {
 
 }
 
-///Gesture and share
 extension ViewController {
     
     func specifyTranslation(gesture: UIPanGestureRecognizer) -> CGFloat {
         let translation = gesture.translation(in: centerView)
         
         if UIDevice.current.orientation.isLandscape {
-            centerView.transform = CGAffineTransform(translationX: translation.x, y: 0)
+            centerView.transform = CGAffineTransform(translationX: min(0, translation.x), y: 0)
             return translation.x
         } else {
-            centerView.transform = CGAffineTransform(translationX: 0, y: translation.y)
+            centerView.transform = CGAffineTransform(translationX: 0, y: min(0, translation.y))
             return translation.y
         }
     }
     
     @objc func dragCenterView(_ sender: UIPanGestureRecognizer) {
         let translation = specifyTranslation(gesture: sender)
-        
         switch sender.state {
             case .began, .changed: break
             case .ended, .cancelled: share(translation: translation)
@@ -134,7 +123,6 @@ extension ViewController {
             UIView.animate(withDuration: 0.3, delay: 0, options: [.curveEaseOut], animations: {
                 self.centerView.transform = UIDevice.current.orientation.isLandscape ? CGAffineTransform(translationX: -1000, y: 0) : CGAffineTransform(translationX: 0, y: -1000)
             })
-            
             if let image = imageWithView(view: centerView) {
                 let vc = UIActivityViewController(activityItems: [image], applicationActivities: [])
                 self.present(vc, animated: true, completion: nil)
@@ -150,7 +138,6 @@ extension ViewController {
                 }
             }
         }
-        
     }
 
     func imageWithView(view: UIView) -> UIImage? {
@@ -162,7 +149,6 @@ extension ViewController {
     
 }
 
-///Image Picker
 extension ViewController:  UIImagePickerControllerDelegate, UINavigationControllerDelegate{
 
     func openCamera(){
@@ -173,32 +159,26 @@ extension ViewController:  UIImagePickerControllerDelegate, UINavigationControll
             imagePicker.delegate = self
             imagePicker.cameraDevice = .front
             self.present(imagePicker, animated: true, completion: nil)
-        }
-        else{
-            let alert  = UIAlertController(title: "Warning", message: "You don't have camera", preferredStyle: .alert)
+        } else {
+            let alert = UIAlertController(title: "Warning", message: "You don't have camera", preferredStyle: .alert)
             alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
 
             self.present(alert, animated: true, completion: nil)
         }
     }
-
-    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
-
-        if let editedImage = info[UIImagePickerController.InfoKey.editedImage] as? UIImage {
-            photoButtons[buttonId].setImage(editedImage, for: .normal)
-        }
-
-        //Dismiss the UIImagePicker after selection
-        picker.dismiss(animated: true, completion: nil)
-    }
-
-    //MARK: - Choose image from camera roll
-
+    
     func openGallary(){
         imagePicker.sourceType = UIImagePickerController.SourceType.photoLibrary
         imagePicker.allowsEditing = true
         imagePicker.delegate = self
         self.present(imagePicker, animated: true, completion: nil)
+    }
+
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+        if let editedImage = info[UIImagePickerController.InfoKey.editedImage] as? UIImage {
+            photoButtons[buttonId].setImage(editedImage, for: .normal)
+        }
+        picker.dismiss(animated: true, completion: nil)
     }
 
     func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
